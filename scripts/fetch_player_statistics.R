@@ -30,13 +30,26 @@ scorecard_url <- "https://olympics.com/tokyo-2020/olympic-games/en/results/golf/
 scorecard_path <- ".d-none .competitor-tab-container .glf-rounds-table"
 id_path <- ".d-none .competitor-tab-container ul"
 stats_path <- ".competitor-tab-container .tab-content"
+results_table_path <- ".table-result"
+
+player_details <- scorecard_url %>% read_html() %>% html_nodes(css=results_table_path) %>% html_table() %>% dplyr::bind_rows()
+player_details[,c(2,12)] <- NULL
+names(player_details)[] <- player_details[1,]
+player_details <- player_details[!player_details$Rank %in% 'Rank',]
+player_details$Thru <- NULL
+player_details$Country <- substr(player_details$Name, start = 1,stop = 3)
+player_details$Name <- substr(player_details$Name,start = 4,stop = nchar(player_details$Name))
+
+player_id <- scorecard_url %>% read_html() %>% html_nodes(css=glue::glue("{results_table_path} tr")) %>% html_attrs() %>% unlist()
+player_id <- stringr::str_replace_all(player_id, pattern = "splitContentResult-GLFWSTROKE------------FNL----------",replacement = "")
+
+player_details$player_ID <- player_id
 
 
 # Functions ---------------------------------------------------------------
 
 get_all_scorecard <- function(){
-  id_data <-
-  scorecard_url %>% read_html() %>% html_nodes(css = id_path) %>% html_attr("competitor")
+  id_data <- scorecard_url %>% read_html() %>% html_nodes(css = id_path) %>% html_attr("competitor")
   scorecard_data <- scorecard_url %>% read_html() %>% html_nodes(css = scorecard_path) %>% html_table() %>% bind_rows()
   id_to_attach <- c()
   for(i in 1:length(id_data)){
@@ -79,6 +92,7 @@ all_player_stats <- bind_rows(all_player_stats)
 
 # Export Files ------------------------------------------------------------
 
+readr::write_csv(player_details, "data/player_profile_details.csv")
 readr::write_csv(all_player_stats,"data/all_player_stats.csv")
 readr::write_csv(par_score,"data/par_score.csv")
 readr::write_csv(player_scorecard,"data/player_scorecard.csv")
