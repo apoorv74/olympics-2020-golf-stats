@@ -32,6 +32,9 @@ id_path <- ".d-none .competitor-tab-container ul"
 stats_path <- ".competitor-tab-container .tab-content"
 results_table_path <- ".table-result"
 
+
+# Player Profile Details --------------------------------------------------
+
 player_details <- scorecard_url %>% read_html() %>% html_nodes(css=results_table_path) %>% html_table() %>% dplyr::bind_rows()
 player_details[,c(2,12)] <- NULL
 names(player_details)[] <- player_details[1,]
@@ -79,7 +82,7 @@ fetch_player_statistics <- function(player_id){
 }
 
 
-# Calls -------------------------------------------------------------------
+# Function Calls -------------------------------------------------------------------
 
 scores <- get_all_scorecard()
 
